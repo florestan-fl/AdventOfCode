@@ -1,3 +1,4 @@
+! This is an alternative to my solution of problem2 that is not optimal at all but I wanted to do a dichotomy ok?
 module m
     use iso_fortran_env
     implicit none
@@ -53,8 +54,7 @@ subroutine problem()
     character(len=bufflen) :: buffer
     integer, parameter :: nbtimes = 4
     integer, parameter :: MyLongIntType = selected_int_kind (16)
-    integer(kind=MyLongIntType) :: time, temp, res, x_one, x_two
-    real(kind=MyLongIntType) :: delta
+    integer(kind=MyLongIntType) :: time, a, b, temp, start, ending, res
     logical eof
 
     open(UNIT=1, file=input, status='old')
@@ -92,12 +92,28 @@ subroutine problem()
     call getTrimNum(s, temp, i, nbtimes)
 
     i=1
-    ! Polynom : (time-x)*x - temp = -x**2 + time*x - temp
-    ! time**2 > 4*temp so delta > 0 so 2 sols
-    delta = time **2 - 4*temp
-    x_one =  CEILING(time - SQRT(delta))/2
-    x_two =  FLOOR(time + SQRT(delta))/2
-    print *, x_two-x_one+1
+    a = 0
+    do while(((time - a)*a<=temp).and.(a<=time))
+        a=a+1
+    end do
+    b = (time + a+1)/2
+    start = a+1
+    ending = time
+    do while(((time-b)*b-temp>=0).or.((time-b+1)*(b+1)-temp<=0))
+        b = (ending+start)/2
+        if ((time-b)*b-temp < 0) then
+            ending = b
+        else
+            start = b
+        end if
+        i=i+1
+        if (i == 100) then
+            exit
+        end if
+    end do
+    b = start
+    res = b-a+1
+    print *, res
     close(1)
 endsubroutine
 
