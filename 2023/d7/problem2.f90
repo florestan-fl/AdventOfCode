@@ -43,7 +43,7 @@ subroutine getPrefix(hand, res)
     ! full house: '4', four of a kind: '5', five of a kind: '6'
     character(len=5), intent(in) :: hand
     character, intent(out) :: res
-    integer :: i, maxfst, maxscd, nbj, counter
+    integer :: i, j, maxfst, maxscd, nbj, counter
     character :: comp
     logical, dimension(5) :: passed
 
@@ -53,60 +53,45 @@ subroutine getPrefix(hand, res)
 
     nbj = 0
     do i=1, 5
-        if (hand(i:i) == 'J') then
-            nbj = nbj + 1
-            passed(i) = .true.
-        end if
     end do
 
     res = '0'
-    counter = 0
-    do (.not. all(passed))
     do i=1, 5
+        counter = 0
         if (passed(i)) cycle
+        if (hand(i:i) == 'J') then
+            nbj = nbj + 1
+            passed(i) = .true.
+            cycle
+        end if
         passed(i) = .true.
         comp = hand(i:i)
         counter = counter + 1
-
-
-
-
-
-
-        nb=49 !'1'
-        comp = hand(i:i)
-        res2 = 1
         do j=i+1, 5
             if (hand(j:j) == comp) then
-                nb = nb + 1
-                if (nb == res2 .and. nb == 48 + 2) then
-                    res = max(res, char(nb+nbj))
-                else if ((nb==48+2 .and. res2==48+3).or.(nb==48+3 .and. res2==48+2)) then
-                    res = max(res, char(48+4))
-                end if
-                cycle
-            end if
-            comp2 = ' '
-            nb2=48 !'0' second pair or full house
-            do k=j, 5
-                if (hand(k:k) == comp .or. hand(k:k) == 'J') cycle
-                comp2 = hand(k:k)
-                nb2 = 49
-                do l=k+1, 5
-                    if (hand(l:l) == comp2) nb2 = nb2 + 1
-                end do
-                res2= max(res2, nb2+nbj)
-            end do
-            if (nb == res2 .and. nb == 48 + 2) then
-                res = max(res, char(nb+nbj))
-            else if ((nb==48+2 .and. res2==48+3).or.(nb==48+3 .and. res2==48+2)) then
-                res = max(res, char(48+4+nbj))
+                passed(j) = .true.
+                counter = counter + 1
             end if
         end do
-        if (nb >= 48 + 4) nb = nb + 1
-        if (nb <= 48 + 2) nb = nb - 1
-        res = max(res, char(nb+nbj))
+        if (counter >= maxfst) then
+            maxscd = maxfst
+            maxfst = counter
+        else if (counter > maxscd) then
+            maxscd = counter
+        end if
     end do
+    if (maxfst+nbj >= 4) then
+        res = char(48 + maxfst + nbj + 1) ! 48 = '0'
+    else if (maxfst+nbj==3 .and. maxscd==2) then
+        res = '4'
+    else  if (maxfst + nbj == 3) then
+        res = char(48 + 3) ! 48 = '0'
+    else if (maxfst == maxscd .and. maxfst == 2) then
+        res = '2'
+    else
+        res = char(48 + maxfst + nbj - 1)
+    end if
+
 
 end subroutine
 
@@ -114,7 +99,6 @@ subroutine isInferior(strA, strB, res)
     character(len=6), intent(in) :: strA, strB
     logical, intent(out) :: res
     integer :: i
-    character, dimension(5) :: letters
 
     res = .false.
     res = strA(1:1) < strB(1:1)
@@ -123,6 +107,10 @@ subroutine isInferior(strA, strB, res)
             if (strA(i:i) == strB(i:i)) cycle
             if (strA(i:i) == 'J') then
                 res = .true.
+                exit
+            end if
+            if (strB(i:i) == 'J') then
+                res = .false.
                 exit
             end if
             if (strA(i:i) >= '0' .and. strA(i:i) <= '9') then
@@ -136,8 +124,6 @@ subroutine isInferior(strA, strB, res)
             select case(strA(i:i))
                 case ('T')
                     res = .true.
-                case ('J')
-                    res = strB(i:i) /= 'T'
                 case ('Q')
                     res = (strB(i:i) /= 'T' .and. strB(i:i) /= 'J')
                 case ('K')
@@ -197,13 +183,13 @@ end subroutine
 
 subroutine problem()
     integer, parameter :: bufflen=1024
-    integer :: io,  isize, i, j, res, temp
+    integer :: io,  isize, i, j, res
     character(len=:),allocatable  :: s
     character(len=bufflen) :: buffer
-    integer, parameter :: nb_hands = 5
+    integer, parameter :: nb_hands = 1000
     character(len=6), dimension(nb_hands) :: hands
     integer, dimension(nb_hands) :: bids
-    logical eof, inferior
+    logical eof
     character :: prefix
 
     res = 0
