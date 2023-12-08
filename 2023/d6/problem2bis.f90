@@ -107,9 +107,6 @@ subroutine problem()
             start = b
         end if
         i=i+1
-        if (i == 100) then
-            exit
-        end if
     end do
     b = start
     res = b-a+1
