@@ -10,6 +10,7 @@ subroutine getNum(str, int_res, i)
     integer, intent(inout)                :: i
     integer, intent(out)                  :: int_res
     integer                               :: nb
+
     int_res = 0
     do i = i, len(str)
         if (str(i:i) >=  '0' .and. str(i:i) <= '9') then
@@ -48,7 +49,6 @@ subroutine isInferior(strA, strB, res)
         if (strA(i:i) == strB(i:i)) cycle
         res = (strA(i:i) < strB(i:i))
         exit
-
     end do
 end subroutine
 
@@ -88,6 +88,7 @@ subroutine find(maps, str, nbLines, res)
     character(len=3) :: str
     integer :: start, ending, loc
     logical :: test
+
     start = 1
     ending = nbLines
     loc = (ending + start) /2
@@ -108,7 +109,6 @@ subroutine find(maps, str, nbLines, res)
             else
                 loc = (ending + start) /2
             end if
-
         end if
     end do
     res = loc
@@ -136,7 +136,6 @@ subroutine ppcm(list, siz, res)
         end do
         res = p/a
     end do
-
 end subroutine
 
 subroutine problem()
@@ -200,8 +199,10 @@ readl:    do while(.not. eof)
     end do
     nbLocs = i - 1
 
-    res = 0
     results(:) = 0
+    res = 0
+    !$OMP PARALLEL DEFAULT(NONE) SHARED(maps, instructions, instructionsLen, nbLines, currLocs)
+    !$OMP DO
     do j=1, nbLocs
         i = 1
         do while (maps(currLocs(j), 1)(3:3) /= 'Z')
@@ -210,6 +211,7 @@ readl:    do while(.not. eof)
             else
                 call find(maps, maps(currLocs(j), 3), nbLines, currLocs(j))
             end if
+            !$OMP ATOMIC
             i=i+1
             results(j) = results(j) + 1
             if (i > instructionsLen) i = 1
@@ -226,6 +228,7 @@ endmodule
 
 program main
     use m
+    use omp_lib
     input='input.txt'
     call problem()
 endprogram
